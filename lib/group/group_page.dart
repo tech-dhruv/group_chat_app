@@ -69,7 +69,6 @@ class _GroupPageState extends State<GroupPage> {
 
     socket!.onDisconnect((_) {
       print('Disconnected from socket server====');
-
     });
   }
 
@@ -90,8 +89,8 @@ class _GroupPageState extends State<GroupPage> {
 
   @override
   void dispose() {
-   socket!.clearListeners();
     socket!.disconnect();
+   socket!.clearListeners();
     _msgController.dispose();
     super.dispose();
   }
@@ -100,7 +99,7 @@ class _GroupPageState extends State<GroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Group"),
+        title: Text(widget.room),
         centerTitle: true,
       ),
       body: Column(

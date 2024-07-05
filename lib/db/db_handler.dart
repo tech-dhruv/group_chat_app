@@ -1,3 +1,4 @@
+import 'package:chat_app_socket/group/msg_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:io' as io;
@@ -16,56 +17,56 @@ class DBHelper {
 
   initDatabase() async {
     io.Directory documentDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentDirectory.path, 'noxodata.db');
+    String path = join(documentDirectory.path, 'chatData.db');
     var db = await openDatabase(path, version: 1, onCreate: _onCreate);
     return db;
   }
 
   _onCreate(Database db, int version) async {
     await db.execute(
-      '''CREATE TABLE notesdata (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, age INTEGER NOT NULL, description TEXT NOT NULL, email TEXT)''',
+      '''CREATE TABLE chatinfo (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, age INTEGER NOT NULL, description TEXT NOT NULL, email TEXT)''',
     );
   }
 
-  Future<NotesModel> insert(NotesModel notesModel) async {
+  Future<MsgModel> insert(MsgModel msgModel) async {
     var dbClient = await db;
     print("======");
-    await dbClient!.insert('notesdata', notesModel.toMap());
-    return notesModel;
+    await dbClient!.insert('chatinfo', msgModel.toMap());
+    return msgModel;
   }
 
-  Future<List<NotesModel>> getNotesList() async {
+  Future<List<MsgModel>> getNotesList() async {
     print("----------------------------------------------");
     var dbClient = await db;
     final List<Map<String, Object?>> queryResult =
-    await dbClient!.query('notesdata');
+    await dbClient!.query('chatinfo');
 
-    return queryResult.map((e) => NotesModel.fromMap(e)).toList();
+    return queryResult.map((e) => MsgModel.fromMap(e)).toList();
   }
 
   Future<int> deleteNotes(int id) async {
     var dbClient = await db;
     return await dbClient!.delete(
-      'notesdata',
+      'chatinfo',
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<int> updateNotes(NotesModel notesModel) async {
+  Future<int> updateNotes(MsgModel msgModel) async {
     var dbClient = await db;
     return await dbClient!.update(
-      'notesdata',
-      notesModel.toMap(),
+      'chatinfo',
+      msgModel.toMap(),
       where: 'id = ?',
-      whereArgs: [notesModel.id],
+      whereArgs: [msgModel.id],
     );
   }
 
   Future deleteTableContent() async {
     var dbClient = await db;
     return await dbClient!.delete(
-      'notesdata',
+      'chatinfo',
     );
   }
 

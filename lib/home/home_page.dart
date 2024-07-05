@@ -1,8 +1,8 @@
 import 'package:chat_app_socket/group/group_page.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:chat_app_socket/home/welcome_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:uuid/uuid.dart';
+
+import '../db/pref.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,23 +12,63 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  TextEditingController nameController = TextEditingController();
+  final SharedPreferencesData prefData = SharedPreferencesData();
+
+  TextEditingController userNameController = TextEditingController();
+  TextEditingController groupNameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  var uuid = const Uuid();
   List<String> contactList = ['Group 1', 'Group 2', 'Group 3', 'Group 4'];
-  String name ="";
+  late String userName;
+  late String userId;
 
   @override
   void initState() {
     super.initState();
+    getUserData();
+  }
+
+  getUserData() {
+    //get username from pref
+    Future<String?> name = prefData.getUserName('username');
+    name.then((value) {
+      setState(() {
+        userName = value.toString();
+        // print("--------------$userName-------");
+      });
+    });
+
+    //get userid from pref
+    Future<String?> id = prefData.getUserName('userid');
+    id.then((value) {
+      setState(() {
+        userId = value.toString();
+        // print("--------------$userId-------");
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Group Chat App'),
+        title: Text('G-Chat',
+            style: TextStyle(
+                fontSize: 25,
+                color: Colors.deepPurpleAccent.withOpacity(0.8),
+                fontWeight: FontWeight.w900)),
         centerTitle: true,
+        actions: [
+          IconButton(onPressed: () async {
+            await prefData.removeUserName('username');
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => WelcomeScreen(),));
+          }, icon: const Icon(Icons.logout)),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          return addNewGroup();
+        },
+        child: const Icon(Icons.add),
       ),
       body: Center(
         child: Column(
@@ -41,24 +81,16 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: ListTile(
                     onTap: () {
-                      if (name.isNotEmpty) {
+
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    GroupPage(name: name, userId: uuid.v1(), room: contactList[index].toString(),)));
-                      } else {
-                        print("======Please Set Username======");
-                        const snackdemo = SnackBar(
-                          content: Text('Please Set Username'),
-                          backgroundColor: Colors.redAccent,
-                          elevation: 10,
-                          behavior: SnackBarBehavior.floating,
-                          margin: EdgeInsets.all(5),
-                        );
-                        ScaffoldMessenger.of(context).clearSnackBars();
-                        ScaffoldMessenger.of(context).showSnackBar(snackdemo);
-                      }
+                                builder: (context) => GroupPage(
+                                      name: userName,
+                                      userId: userId, //uuid.v1(),
+                                      room: contactList[index].toString(),
+                                    )));
+
                     },
                     leading: CircleAvatar(
                       backgroundColor: Colors.grey,
@@ -72,67 +104,69 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-            TextButton(
-              onPressed: () => saveName(),
-              child: const Text(
-                'Set Username',
-                style: TextStyle(color: Colors.teal, fontSize: 16),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  saveName() {
+
+  addNewGroup() {
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Please enter your name"),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: nameController,
-            validator: (value) {
-              if (value == null || value.length < 3) {
-                return "User must have proper name";
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              nameController.clear();
-              Navigator.pop(context);
-            },
-            child: const Text(
-              "Cancel",
-              style: TextStyle(fontSize: 16),
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Please enter group name"),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: groupNameController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter Group name',
+                label: Text('Enter Group Name:'),
+              ),
+              validator: (value) {
+                if (value == null || value.length < 3) {
+                  return "Enter proper group name";
+                }
+                return null;
+              },
             ),
           ),
-          TextButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                name = nameController.text;
-                nameController.clear();
+          actions: [
+            TextButton(
+              onPressed: () {
+                groupNameController.clear();
                 Navigator.pop(context);
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //         builder: (context) =>
-                //             GroupPage(name: name, userId: uuid.v1())));
-              }
-            },
-            child: const Text(
-              "Enter",
-              style: TextStyle(fontSize: 16),
+              },
+              child: const Text(
+                "Cancel",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
-          )
-        ],
-      ),
+            TextButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  // name = userNameController.text;
+                  setState(() {
+                    contactList.add(groupNameController.text);
+                  });
+
+                  print("===============${contactList.toString()}");
+
+                  userNameController.clear();
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Enter",
+                style: TextStyle(fontSize: 16),
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 }
