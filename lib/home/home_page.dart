@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../db/db_handler.dart';
 import '../db/pref.dart';
-import '../group/msg_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,11 +61,30 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: openDrawer(),
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) {
+            return Center(
+              child: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                child: IconButton(
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    icon: Icon(
+                      Icons.person,
+                      color: Colors.white.withOpacity(0.8),
+                      size: 25,
+                    )),
+              ),
+            );
+          },
+        ),
         title: Text('G-Chat',
             style: TextStyle(
                 fontSize: 25,
-                color: Colors.deepPurpleAccent.withOpacity(0.8),
+                color: Colors.white.withOpacity(0.8),
                 fontWeight: FontWeight.w900)),
         centerTitle: true,
         actions: [
@@ -81,6 +99,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.deepPurpleAccent.withOpacity(0.9),
         onPressed: () {
           return addNewGroup();
         },
@@ -93,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               future: contactList,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return Center(
+                  return const Center(
                     child: Text("Oops!! No Group Data"),
                   );
                 } else if (snapshot.connectionState ==
@@ -121,7 +140,8 @@ class _HomePageState extends State<HomePage> {
                                         )));
                           },
                           leading: CircleAvatar(
-                            backgroundColor: Colors.grey,
+                            backgroundColor:
+                                Colors.deepPurpleAccent.withOpacity(0.6),
                             child: Text(
                               snapData![index].substring(0, 1).toString(),
                               style: const TextStyle(color: Colors.white),
@@ -201,4 +221,18 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+  openDrawer(){
+    return Drawer(
+      child: Container(
+        color: Colors.deepPurpleAccent.withOpacity(0.2),
+        child: Column(
+          children: [
+
+          ],
+        ),
+      ),
+    );
+  }
+
 }

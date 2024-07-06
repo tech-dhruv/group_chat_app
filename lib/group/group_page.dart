@@ -11,8 +11,11 @@ class GroupPage extends StatefulWidget {
   final String userId;
   final String room;
 
-  const GroupPage({super.key, required this.name, required this.userId, required this.room});
-
+  const GroupPage(
+      {super.key,
+      required this.name,
+      required this.userId,
+      required this.room});
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -21,10 +24,9 @@ class GroupPage extends StatefulWidget {
 class _GroupPageState extends State<GroupPage> {
   DBHelper? dbHelper;
   IO.Socket? socket;
-  //String room = "anonymous_group";
   List<MsgModel> listMsg = [];
-  /* late List<MsgModel> listMsg; */
   final TextEditingController _msgController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -32,16 +34,19 @@ class _GroupPageState extends State<GroupPage> {
     dbHelper = DBHelper();
     print("int call ${widget.room}");
     connect();
+    loadData();
   }
 
-  // loadData() async {
-  //   setState(() {
-  //     listMsg =  dbHelper!.getChatList(tblName: widget.room);
-  //     data.then((value) {
-  //
-  //     });
-  //   });
-  // }
+  loadData() async {
+    List<MsgModel> messages = await dbHelper!.getChatList(tblName: widget.room);
+    setState(() {
+      listMsg = messages;
+    });
+    _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + listMsg.length * 1000,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut);
+  }
 
   void connect() {
     socket = IO.io("http://192.168.29.245:5251", <String, dynamic>{
@@ -50,27 +55,23 @@ class _GroupPageState extends State<GroupPage> {
     });
     socket!.connect();
 
+    socket!.onConnect((_) {
+      print('==============connected into frontend=============');
+      socket!.emit('join_room', widget.room);
+      print("====>>> ${widget.room}");
+    });
 
-      socket!.onConnect((_) {
-        print('==============connected into frontend=============');
-        socket!.emit('join_room', widget.room);
-        print("====>>> ${widget.room}");
-      });
-
-
-      socket!.on("sendMsgServer", (msg) {
-        print("===============Received message:" + msg.toString());
-        if (msg["userId"] != widget.userId) {
-          setState(() {
-            listMsg.add(
-              MsgModel(
-                  msg: msg["msg"],
-                  type: msg["type"],
-                  sender: msg["senderName"]),
-            );
-          });
-        }
-      });
+    socket!.on("sendMsgServer", (msg) {
+      print("===============Received message:" + msg.toString());
+      if (msg["userId"] != widget.userId) {
+        setState(() {
+          listMsg.add(
+            MsgModel(
+                msg: msg["msg"], type: msg["type"], sender: msg["senderName"]),
+          );
+        });
+      }
+    });
 
     socket!.onConnectError((data) {
       print('Connection Error====: $data');
@@ -81,12 +82,20 @@ class _GroupPageState extends State<GroupPage> {
     });
 
     socket!.onDisconnect((_) {
+      dbHelper!.deleteTableContent(tblName: widget.room).then((value) {
+        print("----------------Clean Successfully-----------------");
+      }).onError((error, stackTrace) {
+        print("--------------Error in Clean store chat------------------");
+      });
+      // clean
+      // null
+
       print('Disconnected from socket server====');
-      dbHelper!.insertChat(msgModel: listMsg,tblName:  widget.room).then((value) {
+      dbHelper!
+          .insertChat(msgModel: listMsg, tblName: widget.room)
+          .then((value) {
         print("======Insert successfully======");
       });
-
-
     });
   }
 
@@ -108,7 +117,7 @@ class _GroupPageState extends State<GroupPage> {
   @override
   void dispose() {
     socket!.disconnect();
-   socket!.clearListeners();
+    socket!.clearListeners();
     _msgController.dispose();
     super.dispose();
   }
@@ -123,44 +132,68 @@ class _GroupPageState extends State<GroupPage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: listMsg.length,
-              itemBuilder: (context, index) {
-                if (listMsg[index].type == "ownMsg") {
-                  return OwnMsgWidget(
-                      sender: listMsg[index].sender, msg: listMsg[index].msg);
-                } else {
-                  return OtherMsgWidget(
-                      sender: listMsg[index].sender, msg: listMsg[index].msg);
-                }
-              },
+            child: Container(
+              color: Colors.deepPurpleAccent.withOpacity(0.2),
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: listMsg.length,
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  if (listMsg[index].type == "ownMsg") {
+                    return OwnMsgWidget(
+                        sender: listMsg[index].sender, msg: listMsg[index].msg);
+                  } else {
+                    return OtherMsgWidget(
+                        sender: listMsg[index].sender, msg: listMsg[index].msg);
+                  }
+                },
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20),
-            child: Row(
-              children: [
-                Expanded(
+          Container(
+            color: Colors.deepPurpleAccent.withOpacity(0.2),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
                     child: TextFormField(
-                  controller: _msgController,
-                  decoration: InputDecoration(
-                      hintText: "Type here...",
-                      border: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                        width: 2,
-                      )),
-                      contentPadding: EdgeInsets.all(8),
-                      suffixIcon: IconButton(
+
+                      controller: _msgController,
+                      decoration: InputDecoration(
+                        fillColor: Colors.white.withOpacity(0.6),
+                        filled: true,
+
+                        enabledBorder:  OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                            borderSide:
+                                BorderSide(width: 2, color: Colors.deepPurpleAccent)),
+                        hintText: "Type here...",
+                        border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                            borderSide:
+                                BorderSide(width: 2, color: Colors.white)),
+                        contentPadding: const EdgeInsets.all(8),
+                        suffixIcon: IconButton(
                           onPressed: () {
+                            _scrollController.animateTo(
+                                _scrollController.position.maxScrollExtent + 70,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut);
                             String msg = _msgController.text;
                             if (msg.isNotEmpty) {
                               sendMsg(msg, widget.name);
                               _msgController.clear();
                             }
                           },
-                          icon: const Icon(Icons.send))),
-                )),
-              ],
+                          icon: const Icon(Icons.send),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         ],

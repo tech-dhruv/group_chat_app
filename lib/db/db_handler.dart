@@ -28,7 +28,7 @@ class DBHelper {
     // );
   }
 
-  Future<void> createTable(String tblName) async{
+  Future<void> createTable(String tblName) async {
     var dbClient = await db;
     await dbClient!.execute(
       '''CREATE TABLE $tblName (id TEXT, type TEXT NOT NULL, msg TEXT NOT NULL, sender TEXT NOT NULL)''',
@@ -38,14 +38,15 @@ class DBHelper {
 
   Future<List<String>> getTables() async {
     var dbClient = await db;
-    final List<Map<String, dynamic>> tables = await dbClient!.rawQuery('SELECT name FROM sqlite_master WHERE type = "table" AND name != "android_metadata"');
+    final List<Map<String, dynamic>> tables = await dbClient!.rawQuery(
+        'SELECT name FROM sqlite_master WHERE type = "table" AND name != "android_metadata"');
     return tables.map((table) => table['name'] as String).toList();
   }
 
-
-  Future<void> insertChat({required List<MsgModel>  msgModel,required String tblName}) async {
+  Future<void> insertChat(
+      {required List<MsgModel> msgModel, required String tblName}) async {
     var dbClient = await db;
-    for(MsgModel data in msgModel){
+    for (MsgModel data in msgModel) {
       await dbClient!.insert(tblName, data.toMap());
     }
     // await dbClient!.insert('chatinfo', msgModel.toMap());
@@ -56,7 +57,7 @@ class DBHelper {
     print("----------------------------------------------");
     var dbClient = await db;
     final List<Map<String, Object?>> queryResult =
-    await dbClient!.query(tblName);
+        await dbClient!.query(tblName);
 
     return queryResult.map((e) => MsgModel.fromMap(e)).toList();
   }
@@ -80,16 +81,13 @@ class DBHelper {
     );
   }
 
-  Future deleteTableContent() async {
+  Future deleteTableContent({required String tblName}) async {
     var dbClient = await db;
-    return await dbClient!.delete(
-      'chatinfo',
-    );
+    return await dbClient!.delete(tblName);
   }
 
   Future close() async {
     var dbClient = await db;
     dbClient!.close();
   }
-
 }

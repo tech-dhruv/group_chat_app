@@ -1,7 +1,6 @@
 import 'package:chat_app_socket/home/home_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/pref.dart';
@@ -9,7 +8,7 @@ import '../db/pref.dart';
 class WelcomeScreen extends StatelessWidget {
   WelcomeScreen({super.key});
 
-  var uuid = const Uuid();
+  final uuid = const Uuid();
   final TextEditingController userNameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final SharedPreferencesData prefData = SharedPreferencesData();
