@@ -1,7 +1,6 @@
 import 'package:chat_app_socket/foundation/msg_widget/other_msg_widget.dart';
 import 'package:chat_app_socket/foundation/msg_widget/own_msg_widget.dart';
 import 'package:chat_app_socket/group/msg_model.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -120,31 +119,29 @@ class _GroupPageState extends State<GroupPage> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20),
-            child: SizedBox(
-              height: 55,
-              child: Row(
-                children: [
-                  Expanded(
-                      child: TextFormField(
-                    controller: _msgController,
-                    decoration: InputDecoration(
-                        hintText: "Type here...",
-                        border: const OutlineInputBorder(
-                            borderSide: BorderSide(
-                          width: 2,
-                        )),
-                        suffixIcon: IconButton(
-                            onPressed: () {
-                              String msg = _msgController.text;
-                              if (msg.isNotEmpty) {
-                                sendMsg(msg, widget.name);
-                                _msgController.clear();
-                              }
-                            },
-                            icon: const Icon(Icons.send))),
-                  )),
-                ],
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                    child: TextFormField(
+                  controller: _msgController,
+                  decoration: InputDecoration(
+                      hintText: "Type here...",
+                      border: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                        width: 2,
+                      )),
+                      contentPadding: EdgeInsets.all(8),
+                      suffixIcon: IconButton(
+                          onPressed: () {
+                            String msg = _msgController.text;
+                            if (msg.isNotEmpty) {
+                              sendMsg(msg, widget.name);
+                              _msgController.clear();
+                            }
+                          },
+                          icon: const Icon(Icons.send))),
+                )),
+              ],
             ),
           )
         ],

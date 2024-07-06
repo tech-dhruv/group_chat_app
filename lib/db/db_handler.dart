@@ -23,10 +23,25 @@ class DBHelper {
   }
 
   _onCreate(Database db, int version) async {
-    await db.execute(
-      '''CREATE TABLE chatinfo (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, age INTEGER NOT NULL, description TEXT NOT NULL, email TEXT)''',
-    );
+    // await db.execute(
+    //   '''CREATE TABLE chatinfo (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, age INTEGER NOT NULL, description TEXT NOT NULL, email TEXT)''',
+    // );
   }
+
+  Future<void> createTable(String tblName) async{
+    var dbClient = await db;
+    await dbClient!.execute(
+      '''CREATE TABLE $tblName (id TEXT, type TEXT NOT NULL, msg TEXT NOT NULL, sender TEXT NOT NULL)''',
+    );
+    print("***************Create table: $tblName successfully *********");
+  }
+
+  Future<List<String>> getTables() async {
+    var dbClient = await db;
+    final List<Map<String, dynamic>> tables = await dbClient!.rawQuery('SELECT name FROM sqlite_master WHERE type = "table" AND name != "android_metadata"');
+    return tables.map((table) => table['name'] as String).toList();
+  }
+
 
   Future<MsgModel> insert(MsgModel msgModel) async {
     var dbClient = await db;
