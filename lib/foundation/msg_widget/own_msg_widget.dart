@@ -14,7 +14,7 @@ class OwnMsgWidget extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width - 60,
         ),
         child:  Card(
-          color: Colors.lightBlue,
+          color: Colors.deepPurpleAccent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),

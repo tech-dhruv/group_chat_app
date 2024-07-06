@@ -43,18 +43,20 @@ class DBHelper {
   }
 
 
-  Future<MsgModel> insert(MsgModel msgModel) async {
+  Future<void> insertChat({required List<MsgModel>  msgModel,required String tblName}) async {
     var dbClient = await db;
-    print("======");
-    await dbClient!.insert('chatinfo', msgModel.toMap());
-    return msgModel;
+    for(MsgModel data in msgModel){
+      await dbClient!.insert(tblName, data.toMap());
+    }
+    // await dbClient!.insert('chatinfo', msgModel.toMap());
+    // return msgModel;
   }
 
-  Future<List<MsgModel>> getNotesList() async {
+  Future<List<MsgModel>> getChatList({required String tblName}) async {
     print("----------------------------------------------");
     var dbClient = await db;
     final List<Map<String, Object?>> queryResult =
-    await dbClient!.query('chatinfo');
+    await dbClient!.query(tblName);
 
     return queryResult.map((e) => MsgModel.fromMap(e)).toList();
   }

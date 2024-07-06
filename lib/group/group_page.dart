@@ -4,6 +4,8 @@ import 'package:chat_app_socket/group/msg_model.dart';
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../db/db_handler.dart';
+
 class GroupPage extends StatefulWidget {
   final String name;
   final String userId;
@@ -17,17 +19,29 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
+  DBHelper? dbHelper;
   IO.Socket? socket;
   //String room = "anonymous_group";
   List<MsgModel> listMsg = [];
+  /* late List<MsgModel> listMsg; */
   final TextEditingController _msgController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    dbHelper = DBHelper();
     print("int call ${widget.room}");
     connect();
   }
+
+  // loadData() async {
+  //   setState(() {
+  //     listMsg =  dbHelper!.getChatList(tblName: widget.room);
+  //     data.then((value) {
+  //
+  //     });
+  //   });
+  // }
 
   void connect() {
     socket = IO.io("http://192.168.29.245:5251", <String, dynamic>{
@@ -68,6 +82,11 @@ class _GroupPageState extends State<GroupPage> {
 
     socket!.onDisconnect((_) {
       print('Disconnected from socket server====');
+      dbHelper!.insertChat(msgModel: listMsg,tblName:  widget.room).then((value) {
+        print("======Insert successfully======");
+      });
+
+
     });
   }
 
