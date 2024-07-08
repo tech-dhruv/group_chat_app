@@ -1,8 +1,6 @@
 import 'package:chat_app_socket/group/group_page.dart';
 import 'package:chat_app_socket/home/welcome_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import '../db/db_handler.dart';
 import '../db/pref.dart';
 
@@ -91,6 +89,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
               onPressed: () async {
                 await prefData.removeUserName('username');
+                dbHelper!.deleteDatabase();
                 Navigator.of(context).pushReplacement(MaterialPageRoute(
                   builder: (context) => WelcomeScreen(),
                 ));
@@ -113,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(
-                    child: Text("Oops!! No Group Data"),
+                    child: Text("Oops!! No Group Data",textAlign: TextAlign.center),
                   );
                 } else if (snapshot.connectionState ==
                     ConnectionState.waiting) {
@@ -161,7 +160,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  addNewGroup() {
+   addNewGroup() {
     return showDialog(
       context: context,
       builder: (context) {
@@ -222,17 +221,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  openDrawer(){
+  openDrawer() {
     return Drawer(
       child: Container(
         color: Colors.deepPurpleAccent.withOpacity(0.2),
-        child: Column(
-          children: [
-
-          ],
+        child: const Column(
+          children: [],
         ),
       ),
     );
   }
-
 }

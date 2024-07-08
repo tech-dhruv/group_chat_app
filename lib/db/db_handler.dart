@@ -54,7 +54,6 @@ class DBHelper {
   }
 
   Future<List<MsgModel>> getChatList({required String tblName}) async {
-    print("----------------------------------------------");
     var dbClient = await db;
     final List<Map<String, Object?>> queryResult =
         await dbClient!.query(tblName);
@@ -62,24 +61,24 @@ class DBHelper {
     return queryResult.map((e) => MsgModel.fromMap(e)).toList();
   }
 
-  Future<int> deleteNotes(int id) async {
-    var dbClient = await db;
-    return await dbClient!.delete(
-      'chatinfo',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
+  // Future<int> deleteNotes(int id) async {
+  //   var dbClient = await db;
+  //   return await dbClient!.delete(
+  //     'chatinfo',
+  //     where: 'id = ?',
+  //     whereArgs: [id],
+  //   );
+  // }
 
-  Future<int> updateNotes(MsgModel msgModel) async {
-    var dbClient = await db;
-    return await dbClient!.update(
-      'chatinfo',
-      msgModel.toMap(),
-      where: 'id = ?',
-      whereArgs: [msgModel.id],
-    );
-  }
+  // Future<int> updateNotes(MsgModel msgModel) async {
+  //   var dbClient = await db;
+  //   return await dbClient!.update(
+  //     'chatinfo',
+  //     msgModel.toMap(),
+  //     where: 'id = ?',
+  //     whereArgs: [msgModel.id],
+  //   );
+  // }
 
   Future deleteTableContent({required String tblName}) async {
     var dbClient = await db;
@@ -87,7 +86,40 @@ class DBHelper {
   }
 
   Future close() async {
+    print("=====Close DB=====");
     var dbClient = await db;
     dbClient!.close();
   }
+
+  // Future<void> deleteDatabase() async {
+  //   io.Directory documentDirectory = await getApplicationDocumentsDirectory();
+  //   String path = join(documentDirectory.path, 'chatData.db');
+  //   var dbClient = await db;
+  //   await dbClient!.close();  // Ensure the database is closed before deletion
+  //   await deleteDatabase(path);
+  //   _db = null;  // Reset the _db variable
+  //   print("***************Database deleted successfully *********");
+  // }
+
+  // Future<void> deleteDatabase() async {
+  //   io.Directory documentDirectory = await getApplicationDocumentsDirectory();
+  //   String path = join(documentDirectory.path, 'chatData.db');
+  //   var dbClient = await db;
+  //   await dbClient!.close();  // Ensure the database is closed before deletion
+  //   await sqflite.deleteDatabase(path);  // Explicitly use sqflite's deleteDatabase method
+  //   _db = null;  // Reset the _db variable
+  //   print("***************Database deleted successfully *********");
+  // }
+
+  Future<void> deleteDatabase() async {
+    io.Directory documentDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentDirectory.path, 'chatData.db');
+    var dbClient = await db;
+    await dbClient!.close();
+    await databaseFactory.deleteDatabase(path);
+    _db = null;  // Reset the _db variable
+    print("***************Database deleted successfully *********");
+  }
+
+
 }

@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
      getUsername();
     Timer(
-      Duration(seconds: 3),
+      const Duration(seconds: 3),
       () {
         userName == ""
             ? Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
     name.then((value) {
       setState(() {
         userName = value;
-        print("--------------$userName-------");
+        print("=============$userName-------");
       });
     });
   }

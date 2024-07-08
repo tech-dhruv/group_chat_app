@@ -1,6 +1,8 @@
 import 'package:chat_app_socket/foundation/msg_widget/other_msg_widget.dart';
 import 'package:chat_app_socket/foundation/msg_widget/own_msg_widget.dart';
 import 'package:chat_app_socket/group/msg_model.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -26,18 +28,27 @@ class _GroupPageState extends State<GroupPage> {
   IO.Socket? socket;
   List<MsgModel> listMsg = [];
   final TextEditingController _msgController = TextEditingController();
+  bool _emojiShowing = false;
   final ScrollController _scrollController = ScrollController();
+  FocusNode focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     dbHelper = DBHelper();
     print("int call ${widget.room}");
-    connect();
-    loadData();
+    connect(); //for socket connection
+    loadChatData(); //for load chat & data from sqlite
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        setState(() {
+          _emojiShowing = false;
+        });
+      }
+    });
   }
 
-  loadData() async {
+  loadChatData() async {
     List<MsgModel> messages = await dbHelper!.getChatList(tblName: widget.room);
     setState(() {
       listMsg = messages;
@@ -62,7 +73,7 @@ class _GroupPageState extends State<GroupPage> {
     });
 
     socket!.on("sendMsgServer", (msg) {
-      print("===============Received message:" + msg.toString());
+      print("===============Received message:$msg");
       if (msg["userId"] != widget.userId) {
         setState(() {
           listMsg.add(
@@ -124,79 +135,146 @@ class _GroupPageState extends State<GroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.room),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              color: Colors.deepPurpleAccent.withOpacity(0.2),
-              child: ListView.builder(
-                controller: _scrollController,
-                itemCount: listMsg.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  if (listMsg[index].type == "ownMsg") {
-                    return OwnMsgWidget(
-                        sender: listMsg[index].sender, msg: listMsg[index].msg);
-                  } else {
-                    return OtherMsgWidget(
-                        sender: listMsg[index].sender, msg: listMsg[index].msg);
-                  }
-                },
+    return WillPopScope(
+      onWillPop: () {
+        if (_emojiShowing) {
+          setState(() {
+            _emojiShowing = false;
+          });
+        } else {
+          Navigator.pop(context);
+        }
+        return Future.value(false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.room),
+          centerTitle: true,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Container(
+                color: Colors.deepPurpleAccent.withOpacity(0.2),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: listMsg.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    if (listMsg[index].type == "ownMsg") {
+                      return OwnMsgWidget(
+                          sender: listMsg[index].sender,
+                          msg: listMsg[index].msg);
+                    } else {
+                      return OtherMsgWidget(
+                          sender: listMsg[index].sender,
+                          msg: listMsg[index].msg);
+                    }
+                  },
+                ),
               ),
             ),
-          ),
-          Container(
-            color: Colors.deepPurpleAccent.withOpacity(0.2),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-
-                      controller: _msgController,
-                      decoration: InputDecoration(
-                        fillColor: Colors.white.withOpacity(0.6),
-                        filled: true,
-
-                        enabledBorder:  OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                            borderSide:
-                                BorderSide(width: 2, color: Colors.deepPurpleAccent)),
-                        hintText: "Type here...",
-                        border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                            borderSide:
-                                BorderSide(width: 2, color: Colors.white)),
-                        contentPadding: const EdgeInsets.all(8),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            _scrollController.animateTo(
-                                _scrollController.position.maxScrollExtent + 70,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOut);
-                            String msg = _msgController.text;
-                            if (msg.isNotEmpty) {
-                              sendMsg(msg, widget.name);
-                              _msgController.clear();
-                            }
-                          },
-                          icon: const Icon(Icons.send),
+            Column(
+              children: [
+                Container(
+                  color: Colors.deepPurpleAccent.withOpacity(0.2),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 10),
+                    child: Row(
+                      // mainAxisSize: MainAxisSize.min,
+                      // crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            focusNode: focusNode,
+                            controller: _msgController,
+                            decoration: InputDecoration(
+                              prefixIconColor:
+                                  Colors.deepPurpleAccent.withOpacity(0.8),
+                              suffixIconColor:
+                                  Colors.deepPurpleAccent.withOpacity(0.8),
+                              fillColor: Colors.white.withOpacity(0.6),
+                              filled: true,
+                              enabledBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15)),
+                                  borderSide: BorderSide(
+                                      width: 2,
+                                      color: Colors.deepPurpleAccent)),
+                              hintText: "Type here...",
+                              border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15)),
+                                  borderSide: BorderSide(
+                                      width: 2, color: Colors.white)),
+                              contentPadding: const EdgeInsets.all(8),
+                              prefixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      focusNode.unfocus();
+                                      focusNode.canRequestFocus = false;
+                                      _emojiShowing = !_emojiShowing;
+                                    });
+                                  },
+                                  icon: const Icon(
+                                    Icons.emoji_emotions,
+                                    // color: Colors.deepPurpleAccent,
+                                  )),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  _scrollController.animateTo(
+                                      _scrollController
+                                              .position.maxScrollExtent +
+                                          70,
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeOut);
+                                  String msg = _msgController.text;
+                                  if (msg.isNotEmpty) {
+                                    sendMsg(msg, widget.name);
+                                    _msgController.clear();
+                                  }
+                                },
+                                icon: const Icon(Icons.send),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          )
-        ],
+                ),
+                emojiSelect()
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget emojiSelect() {
+    return Offstage(
+      offstage: !_emojiShowing,
+      child: EmojiPicker(
+        textEditingController: _msgController,
+        scrollController: _scrollController,
+        config: Config(
+          height: 256,
+          checkPlatformCompatibility: true,
+          emojiViewConfig: EmojiViewConfig(
+            emojiSizeMax: 28 *
+                (foundation.defaultTargetPlatform == TargetPlatform.iOS
+                    ? 1.2
+                    : 1.0),
+          ),
+          swapCategoryAndBottomBar: false,
+          skinToneConfig: const SkinToneConfig(),
+          categoryViewConfig: const CategoryViewConfig(),
+          bottomActionBarConfig: const BottomActionBarConfig(),
+          searchViewConfig: const SearchViewConfig(),
+        ),
       ),
     );
   }
